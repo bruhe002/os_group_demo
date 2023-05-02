@@ -43,12 +43,14 @@ vector<sim_thread*> BLOCKED_THREADS;
 // We will use an array of boolean values to simulate resources being taken
 bool resources[NUMBER_OF_RESOURCES] = {false}; 
 
+// FUNCTIONS
 void print_thread(const struct sim_thread t);
 void signal(int freed_idx);
 bool block(struct sim_thread *t);
 void add_to_queue(struct sim_thread *t);
 bool empty_store_arr();
 void arriving_thread(struct sim_thread *t, int current_thread);
+bool queues_empty();
 
 int main() {
     // Simulating MFC preemptive scheduling for threads
@@ -91,6 +93,8 @@ int main() {
     int time_slice = TIME_SLICE_VALUE;         // 2 milliseconds
     bool blocked = false;
 
+    sim_thread* current_thread = nullptr;
+
     /*
         There will be a loop that will check the clock_time per iteration
         For each iteration, the system will add new threads to their respective queues
@@ -106,7 +110,11 @@ int main() {
         If 3 occurs, immediately move the current running thread to the back of its queue, reset the time slice, change the currentPriority,
             and run a new thread
 
-        Before we decrement the current process's time, let's check if any of the higher priorities
+        Before we decrement the current thread's time, let's check if any of the higher priorities queues are not empty
+            Loop from the top and check if the queues are empty up until the current queue.
+            If a queue is not empty, immediatly change the current Thread
+
+            Regardless of a change or not, continue running the process and decrement the burst time of the current running thread 
 
         Once a thread begins running, immediately check to see if it needs a resource (-1 means it doesn't need a resource)
         If a resource is needed, use the thread's needed_resource attribute as the index to "resources" array defined earlier.
@@ -125,6 +133,7 @@ int main() {
         The condition to end the main loop I still need to work out. We can stop when all threads have completed, so when the store_arr is full of 
             nullptrs? 
     */
+    
     cout << endl;
     system("Pause");
     return 0;
@@ -202,10 +211,10 @@ void add_to_queue(struct sim_thread *t) {
             THREAD_PRIORITY_ABOVE_NORMAL.push(t);
             break;
         case 6:
-            THREAD_PRIORITY_ABOVE_NORMAL.push(t);
+            THREAD_PRIORITY_HIGHEST.push(t);
             break;
         case 7:  
-            THREAD_PRIORITY_HIGHEST.push(t);
+            THREAD_PRIORITY_TIME_CRITICAL.push(t);
             break;
 
     }
@@ -235,4 +244,39 @@ void arriving_thread(struct sim_thread *t, int current_time) {
     if(t->arrival_time == current_time) {
         add_to_queue(t);
     }
+}
+
+/*
+    Checks if all queues are empty
+*/
+bool queues_empty() {
+    if(!THREAD_PRIORITY_TIME_CRITICAL.empty()) {
+        return false;
+    }
+
+    if(!THREAD_PRIORITY_HIGHEST.empty()) {
+        return false;
+    }
+
+    if(!THREAD_PRIORITY_ABOVE_NORMAL.empty()) {
+        return false;
+    }
+
+    if(!THREAD_PRIORITY_NORMAL.empty()) {
+        return false;
+    }
+
+    if(!THREAD_PRIORITY_BELOW_NORMAL.empty()) {
+        return false;
+    }
+
+    if(!THREAD_PRIORITY_LOWEST.empty()) {
+        return false;
+    }
+
+    if(!THREAD_PRIORITY_IDLE.empty()) {
+        return false;
+    }
+
+    return true;
 }
