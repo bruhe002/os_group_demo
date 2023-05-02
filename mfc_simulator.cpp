@@ -12,6 +12,7 @@ using namespace std;
 const int NUMBER_OF_THREADS = 15;
 const int NUMBER_OF_RESOURCES = 20;
 const string FILE_NAME = "test_threads.txt";
+const int TIME_SLICE_VALUE = 2;
 
 // Create a struct to simulate threads
 struct sim_thread {
@@ -86,7 +87,7 @@ int main() {
     int clock_time = 0;
     int currentPriority = 7;
     // For simplicity, we will use one time slice for all queues
-    int time_slice = 2;         // 2 milliseconds
+    int time_slice = TIME_SLICE_VALUE;         // 2 milliseconds
 
     /*
         There will be a loop that will check the clock_time per iteration
