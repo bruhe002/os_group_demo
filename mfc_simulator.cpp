@@ -154,7 +154,12 @@ int main() {
         // Loop through for each CPU
         for (unsigned i = 0; i < NUM_CPUS; i++)
         {
+<<<<<<< HEAD
             if (curr_priorities[i] != queues_empty(curr_priorities[i]));
+=======
+            if (curr_priorities[i] != queues_empty(curr_priorities[i]))
+
+>>>>>>> 658b1b0dff7178e777ea1c00d0bac01c56c1b1c2
         }
 
         // End with incrementing clock time
@@ -306,20 +311,44 @@ priority queues_empty(priority abovePriority=ANY) {
     return max;
 }
 
+// A function to return the highest priority from the relative queue
 sim_thread* grab_next(priority queueFrom)
 {
+    sim_thread* val = nullptr;
     if (queueFrom == IDLE)
-        return THREAD_PRIORITY_IDLE.pop();
+    {
+        val = THREAD_PRIORITY_IDLE.front();
+        THREAD_PRIORITY_IDLE.pop();
+    }
     if (queueFrom == LOWEST)
-        return THREAD_PRIORITY_IDLE.pop();
+    {
+        val = THREAD_PRIORITY_LOWEST.front();
+        THREAD_PRIORITY_LOWEST.pop();
+    }
     if (queueFrom == BELOW_NORMAL)
-        return THREAD_PRIORITY_IDLE.pop();
+    {
+        val = THREAD_PRIORITY_BELOW_NORMAL.front();
+        THREAD_PRIORITY_BELOW_NORMAL.pop();
+    }
     if (queueFrom == NORMAL)
-        return THREAD_PRIORITY_IDLE.pop();
+    {
+        val = THREAD_PRIORITY_NORMAL.front();
+        THREAD_PRIORITY_NORMAL.pop();
+    }
     if (queueFrom == ABOVE_NORMAL)
-        return THREAD_PRIORITY_IDLE.pop();
+    {
+        val = THREAD_PRIORITY_ABOVE_NORMAL.front();
+        THREAD_PRIORITY_ABOVE_NORMAL.pop();
+    }
     if (queueFrom == HIGHEST)
-        return THREAD_PRIORITY_IDLE.pop();
+    {
+        val = THREAD_PRIORITY_HIGHEST.front();
+        THREAD_PRIORITY_HIGHEST.pop();
+    }
     if (queueFrom == TIME_CRITICAL)
-        return THREAD_PRIORITY_IDLE.pop();
+    {
+        val = THREAD_PRIORITY_TIME_CRITICAL.front();
+        THREAD_PRIORITY_TIME_CRITICAL.pop();
+    }
+    return val;
 }
