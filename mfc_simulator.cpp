@@ -45,6 +45,7 @@ bool resources[NUMBER_OF_RESOURCES] = {false};
 void print_thread(struct sim_thread t);
 void signal(int freed_idx);
 void add_to_queue(struct sim_thread *t);
+bool empty_store_arr();
 
 int main() {
     // Simulating MFC preemptive scheduling for threads
@@ -181,4 +182,19 @@ void add_to_queue(struct sim_thread *t) {
             break;
 
     }
+}
+
+/*
+    Checks if all the pointers in the array are nullptr
+    If so, return true
+*/
+bool empty_store_arr() {
+    bool result = true;
+    for(int i = 0; i < NUMBER_OF_THREADS; i++) {
+        if(store_arr[i] != nullptr) {
+            result = false;
+        }
+    }
+
+    return result;
 }
