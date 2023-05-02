@@ -25,6 +25,8 @@ struct sim_thread {
     bool has_resource = false; // Identifies if thread has resource
 };
 
+enum priority {ANY=-1, IDLE, LOWEST, BELOW_NORMAL, NORMAL, ABOVE_NORMAL, HIGHEST, TIME_CRITICAL};
+
 // Create the Priority Queues
 queue<sim_thread*> THREAD_PRIORITY_IDLE;
 queue<sim_thread*> THREAD_PRIORITY_LOWEST;
@@ -249,34 +251,30 @@ void arriving_thread(struct sim_thread *t, int current_time) {
 /*
     Checks if all queues are empty
 */
-bool queues_empty() {
-    if(!THREAD_PRIORITY_TIME_CRITICAL.empty()) {
-        return false;
+bool queues_empty(priority abovePriority=ANY) {
+    switch (abovePriority)
+    {
+    case ANY:
+        if (!THREAD_PRIORITY_IDLE.empty())
+            return false ;
+    case IDLE:
+        if (!THREAD_PRIORITY_LOWEST.empty())
+            return false;
+    case LOWEST:
+        if (!THREAD_PRIORITY_BELOW_NORMAL.empty())
+            return false;
+    case BELOW_NORMAL:
+        if (!THREAD_PRIORITY_NORMAL.empty())
+            return false;
+    case NORMAL:
+        if (!THREAD_PRIORITY_ABOVE_NORMAL.empty())
+            return false;
+    case ABOVE_NORMAL:
+        if (!THREAD_PRIORITY_HIGHEST.empty())
+            return false;
+    case HIGHEST:
+        if (!THREAD_PRIORITY_TIME_CRITICAL.empty())
+            return false;
     }
-
-    if(!THREAD_PRIORITY_HIGHEST.empty()) {
-        return false;
-    }
-
-    if(!THREAD_PRIORITY_ABOVE_NORMAL.empty()) {
-        return false;
-    }
-
-    if(!THREAD_PRIORITY_NORMAL.empty()) {
-        return false;
-    }
-
-    if(!THREAD_PRIORITY_BELOW_NORMAL.empty()) {
-        return false;
-    }
-
-    if(!THREAD_PRIORITY_LOWEST.empty()) {
-        return false;
-    }
-
-    if(!THREAD_PRIORITY_IDLE.empty()) {
-        return false;
-    }
-
     return true;
 }
