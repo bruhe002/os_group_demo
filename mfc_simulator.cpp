@@ -154,12 +154,9 @@ int main() {
         // Loop through for each CPU
         for (unsigned i = 0; i < NUM_CPUS; i++)
         {
-<<<<<<< HEAD
-            if (curr_priorities[i] != queues_empty(curr_priorities[i]));
-=======
             if (curr_priorities[i] != queues_empty(curr_priorities[i]))
 
->>>>>>> 658b1b0dff7178e777ea1c00d0bac01c56c1b1c2
+
         }
 
         // End with incrementing clock time
@@ -352,3 +349,4 @@ sim_thread* grab_next(priority queueFrom)
     }
     return val;
 }
+
