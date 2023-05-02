@@ -19,30 +19,30 @@ struct sim_thread {
     int burst_time; // Execution time
     int arrival_time; // Time of Arrival
     int needed_resource;    // Used to simulate resources being used 
+    bool has_resource = false; // Identifies if thread has resource
 };
 
+// Create the Priority Queues
+queue<sim_thread*> THREAD_PRIORITY_IDLE;
+queue<sim_thread*> THREAD_PRIORITY_LOWEST;
+queue<sim_thread*> THREAD_PRIORITY_BELOW_NORMAL;
+queue<sim_thread*> THREAD_PRIORITY_NORMAL;
+queue<sim_thread*> THREAD_PRIORITY_ABOVE_NORMAL;
+queue<sim_thread*> THREAD_PRIORITY_HIGHEST;
+queue<sim_thread*> THREAD_PRIORITY_TIME_CRITICAL;
+
+// Create a storage array for the threads
+sim_thread* store_arr[NUMBER_OF_THREADS];
+
+// Have a blocked queue
+queue<sim_thread*> BLOCKED_THREADS;
+
 void print_thread(struct sim_thread t);
+void signal(int freed_idx);
+void add_to_queue(struct sim_thread *t);
 
 int main() {
     // Simulating MFC preemptive scheduling for threads
-
-    // Create the Priority Queues
-    queue<sim_thread*> THREAD_PRIORITY_IDLE;
-    queue<sim_thread*> THREAD_PRIORITY_LOWEST;
-    queue<sim_thread*> THREAD_PRIORITY_BELOW_NORMAL;
-    queue<sim_thread*> THREAD_PRIORITY_NORMAL;
-    queue<sim_thread*> THREAD_PRIORITY_ABOVE_NORMAL;
-    queue<sim_thread*> THREAD_PRIORITY_HIGHEST;
-    queue<sim_thread*> THREAD_PRIORITY_TIME_CRITICAL;
-
-    // Create a storage array for the threads
-    sim_thread* store_arr[NUMBER_OF_THREADS];
-
-    // Have a blocked queue
-    queue<sim_thread*> BLOCKED_THREADS;
-
-    // For simplicity, we will use one time slice for all queues
-    int time_slice = 2;         // 2 milliseconds
 
     // We will use an array of boolean values to simulate resources being taken
     bool resources[NUMBER_OF_RESOURCES];
@@ -78,10 +78,47 @@ int main() {
             ptr = strtok(NULL, " ");
 
             print_thread(*store_arr[i]);                // Print for Testing
-        }
-        
+        } 
     }
 
+    // Set up variables that will replicate the "System"
+    int clock_time = 0;
+    int currentPriority = 7;
+    // For simplicity, we will use one time slice for all queues
+    int time_slice = 2;         // 2 milliseconds
+
+    /*
+        There will be a loop that will check the clock_time per iteration
+        For each iteration, the system will add new threads to their respective queues
+        if their arrival time matches clock_time (USE add_to_queue METHOD!)
+
+        The first process in the current priority queue will run until one of three things occur,
+            1. It finishes execution
+            2. The time slice expires
+            3. A higher priority queue is no longer empty
+
+        If 1 occurs, delete the thread pointer, and start running a new thread
+        If 2 occurs, add the current running thread to the back of its assigned queue, reset the time slice, and run a new thread
+        If 3 occurs, immediately move the current running thread to the back of its queue, reset the time slice, change the currentPriority,
+            and run a new thread
+
+        Once a thread begins running, immediately check to see if it needs a resource (-1 means it doesn't need a resource)
+        If a resource is needed, use the thread's needed_resource attribute as the index to "resources" array defined earlier.
+        If the resource at the index is FALSE, set it to TRUE, and set the thread's has_resource attribute to TRUE.
+        If the resource is already TRUE, and the Thread's has_resource is FALSE, the thread becomes blocked 
+            => push it to the blocked queue
+        If the resource is already TRUE, and the Thread's has_resource is TRUE, the thread was the one who acquired the resource, 
+            continue running as normal
+
+        There will be a function defined SIGNAL which will loop through the block queue and check if the blocked threads' needed_resource
+            have been changed to FALSE
+        If so, move the blocked thread back to its priority queue.
+
+        The attributes of the threads are public and can be changed directly. Use burst_time as a counter for remaining time the thread has to execute.
+
+        The condition to end the main loop I still need to work out. We can stop when all threads have completed, so when the store_arr is full of 
+            nullptrs? 
+    */
     cout << endl;
     system("Pause");
     return 0;
@@ -93,4 +130,28 @@ void print_thread(struct sim_thread t) {
     cout << "\tThread Burst Time " << t.burst_time << endl; 
     cout << "\tThread Arrival Time " << t.arrival_time << endl;
     cout << "\tThread Needed Resource " << t.needed_resource << endl;  
+}
+
+
+/*
+    Checks the blocked queue to return a thread to its priority queue based on 
+    a resource that was just free
+
+    Open to making this an array
+*/
+void signal(int freed_idx) {
+
+}
+
+
+/*
+    Called whenever a thread will be added to a queue when clock time matches the arrival time
+    Use the argument thread's priority attribute as a selector in a switch statement
+    Each case will match the queues level of priority
+        7 -> THREAD_PRIORITY_TIME_CRITICAL
+        1 -> THREAD_PRIORITY_IDLE
+    Based on the priority, push it to the appropriate queue
+*/
+void add_to_queue(struct sim_thread *t) {
+
 }
