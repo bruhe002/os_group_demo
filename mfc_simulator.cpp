@@ -11,8 +11,8 @@ using namespace std;
 
 const int NUMBER_OF_THREADS = 15;
 const int NUMBER_OF_RESOURCES = 20;
-const string FILE_NAME = "test_threads.txt";
 const int TIME_SLICE_VALUE = 2;
+const string FILE_NAME = "test_threads.txt";
 
 // Create a struct to simulate threads
 struct sim_thread {
@@ -37,7 +37,10 @@ queue<sim_thread*> THREAD_PRIORITY_TIME_CRITICAL;
 sim_thread* store_arr[NUMBER_OF_THREADS];
 
 // Have a blocked queue
-queue<sim_thread*> BLOCKED_THREADS;
+vector<sim_thread*> BLOCKED_THREADS;
+
+// We will use an array of boolean values to simulate resources being taken
+bool resources[NUMBER_OF_RESOURCES] = {false}; 
 
 void print_thread(struct sim_thread t);
 void signal(int freed_idx);
@@ -45,12 +48,6 @@ void add_to_queue(struct sim_thread *t);
 
 int main() {
     // Simulating MFC preemptive scheduling for threads
-
-    // We will use an array of boolean values to simulate resources being taken
-    bool resources[NUMBER_OF_RESOURCES];
-    for(int i = 0; i < NUMBER_OF_RESOURCES; i++) {
-        resources[i] = false;
-    }
 
     // Create threads and add them to the array
     ifstream my_file(FILE_NAME);        // use ifstream to read from file
@@ -139,10 +136,15 @@ void print_thread(struct sim_thread t) {
     Checks the blocked queue to return a thread to its priority queue based on 
     a resource that was just free
 
-    Open to making this an array
+    Block queue is a vector, so all the functionalities of a queue and array
 */
 void signal(int freed_idx) {
-
+    for(int i = 0; i < BLOCKED_THREADS.size(); i++) {
+        if(resources[freed_idx] == BLOCKED_THREADS[i]->needed_resource) {
+            add_to_queue(BLOCKED_THREADS[i]);
+            BLOCKED_THREADS.erase(BLOCKED_THREADS.begin() + i);
+        }
+    }
 }
 
 
