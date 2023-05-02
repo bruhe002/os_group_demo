@@ -13,6 +13,7 @@ const int NUMBER_OF_THREADS = 15;
 const int NUMBER_OF_RESOURCES = 20;
 const int TIME_SLICE_VALUE = 2;
 const int NUMBER_OF_PRIORITY_QUEUES = 7;
+const int NUM_CPUS = 2;
 const string FILE_NAME = "test_threads.txt";
 
 // Create a struct to simulate threads
@@ -25,6 +26,7 @@ struct sim_thread {
     bool has_resource = false; // Identifies if thread has resource
 };
 
+// Create an enum to track priority values
 enum priority {ANY=-1, IDLE, LOWEST, BELOW_NORMAL, NORMAL, ABOVE_NORMAL, HIGHEST, TIME_CRITICAL};
 
 // Create the Priority Queues
@@ -90,12 +92,17 @@ int main() {
 
     // Set up variables that will replicate the "System"
     int clock_time = 0;
-    int currentPriority = 7;
+    priority curr_priorities[NUM_CPUS];
+    for (unsigned i = 0; i < NUM_CPUS; i++)
+        curr_priorities[i] = ANY;
     // For simplicity, we will use one time slice for all queues
     int time_slice = TIME_SLICE_VALUE;         // 2 milliseconds
     bool blocked = false;
+    unsigned completed_threads = 0;
 
-    sim_thread* current_thread = nullptr;
+    sim_thread* current_thread[NUM_CPUS];
+    for (unsigned i = 0; i < NUM_CPUS; i++)
+        current_thread[i] = nullptr;
 
     /*
         There will be a loop that will check the clock_time per iteration
@@ -136,6 +143,24 @@ int main() {
             nullptrs? 
     */
     
+    // Loop for everything above
+    while (completed_threads < NUMBER_OF_THREADS)
+    {
+        // Start by checking if any threads have arrived
+        for (unsigned i = 0; i < NUMBER_OF_THREADS; i++)
+            arriving_thread(store_arr[i], clock_time);
+
+
+        // Loop through for each CPU
+        for (unsigned i = 0; i < NUM_CPUS; i++)
+        {
+        }
+
+        // End with incrementing clock time
+        clock_time++;
+
+    }
+
     cout << endl;
     system("Pause");
     return 0;
@@ -278,3 +303,4 @@ bool queues_empty(priority abovePriority=ANY) {
     }
     return true;
 }
+
