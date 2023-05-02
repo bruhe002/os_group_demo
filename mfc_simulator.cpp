@@ -12,6 +12,7 @@ using namespace std;
 const int NUMBER_OF_THREADS = 15;
 const int NUMBER_OF_RESOURCES = 20;
 const int TIME_SLICE_VALUE = 2;
+const int NUMBER_OF_PRIORITY_QUEUES = 7;
 const string FILE_NAME = "test_threads.txt";
 
 // Create a struct to simulate threads
@@ -93,7 +94,7 @@ int main() {
     /*
         There will be a loop that will check the clock_time per iteration
         For each iteration, the system will add new threads to their respective queues
-        if their arrival time matches clock_time (USE add_to_queue METHOD!)
+        if their arrival time matches clock_time (USE arriving_thread METHOD!)
 
         The first process in the current priority queue will run until one of three things occur,
             1. It finishes execution
@@ -104,6 +105,8 @@ int main() {
         If 2 occurs, add the current running thread to the back of its assigned queue, reset the time slice, and run a new thread
         If 3 occurs, immediately move the current running thread to the back of its queue, reset the time slice, change the currentPriority,
             and run a new thread
+
+        Before we decrement the current process's time, let's check if any of the higher priorities
 
         Once a thread begins running, immediately check to see if it needs a resource (-1 means it doesn't need a resource)
         If a resource is needed, use the thread's needed_resource attribute as the index to "resources" array defined earlier.
