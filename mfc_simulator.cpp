@@ -42,10 +42,11 @@ vector<sim_thread*> BLOCKED_THREADS;
 // We will use an array of boolean values to simulate resources being taken
 bool resources[NUMBER_OF_RESOURCES] = {false}; 
 
-void print_thread(struct sim_thread t);
+void print_thread(const struct sim_thread t);
 void signal(int freed_idx);
 void add_to_queue(struct sim_thread *t);
 bool empty_store_arr();
+bool arriving_thread(struct sim_thread *t, int current_thread);
 
 int main() {
     // Simulating MFC preemptive scheduling for threads
@@ -124,7 +125,7 @@ int main() {
     return 0;
 }
 
-void print_thread(struct sim_thread t) {
+void print_thread(const struct sim_thread t) {
     cout << "Thread ID " << t.tid << endl;
     cout << "\tThread Priority " << t.priority << endl; 
     cout << "\tThread Burst Time " << t.burst_time << endl; 
@@ -197,4 +198,15 @@ bool empty_store_arr() {
     }
 
     return result;
+}
+
+
+/*
+    Checks if a thread's arriving time matches the current time
+    if so return, add to queue
+*/
+bool arriving_thread(struct sim_thread *t, int current_time) {
+    if(t->arrival_time == current_time) {
+        add_to_queue(t);
+    }
 }
