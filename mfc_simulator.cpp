@@ -44,6 +44,7 @@ bool resources[NUMBER_OF_RESOURCES] = {false};
 
 void print_thread(const struct sim_thread t);
 void signal(int freed_idx);
+bool block(struct sim_thread *t);
 void add_to_queue(struct sim_thread *t);
 bool empty_store_arr();
 void arriving_thread(struct sim_thread *t, int current_thread);
@@ -87,6 +88,7 @@ int main() {
     int currentPriority = 7;
     // For simplicity, we will use one time slice for all queues
     int time_slice = TIME_SLICE_VALUE;         // 2 milliseconds
+    bool blocked = false;
 
     /*
         There will be a loop that will check the clock_time per iteration
@@ -142,13 +144,34 @@ void print_thread(const struct sim_thread t) {
 */
 void signal(int freed_idx) {
     for(int i = 0; i < BLOCKED_THREADS.size(); i++) {
-        if(resources[freed_idx] == BLOCKED_THREADS[i]->needed_resource) {
+        if(freed_idx == BLOCKED_THREADS[i]->needed_resource) {
             add_to_queue(BLOCKED_THREADS[i]);
             BLOCKED_THREADS.erase(BLOCKED_THREADS.begin() + i);
         }
     }
 }
 
+/*
+    Checks if the current running thread's resource is already taken
+    If yes, and the thread isn't the holder of the resource isn't TRUE,
+    block the thread, return TRUE
+
+    else acquire the resource (change the resource idx and has_resource to TRUE)
+    then return FALSE
+*/
+bool block(struct sim_thread *t) {
+    if(resources[t->needed_resource]){
+        if(!(t->has_resource)) {
+            BLOCKED_THREADS.push_back(t);
+            return true;
+        }
+        return false;
+    } else {
+        resources[t->needed_resource] = true;
+        t->has_resource = true;
+        return false;
+    }
+}
 
 /*
     Called whenever a thread will be added to a queue when clock time matches the arrival time
