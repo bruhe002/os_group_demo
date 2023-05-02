@@ -154,6 +154,7 @@ int main() {
         // Loop through for each CPU
         for (unsigned i = 0; i < NUM_CPUS; i++)
         {
+            if (curr_priorites[i] != queues_empty(curr_priorities[i]))
         }
 
         // End with incrementing clock time
@@ -276,31 +277,49 @@ void arriving_thread(struct sim_thread *t, int current_time) {
 /*
     Checks if all queues are empty
 */
-bool queues_empty(priority abovePriority=ANY) {
+priority queues_empty(priority abovePriority=ANY) {
+    priority max = abovePriority;
     switch (abovePriority)
     {
     case ANY:
         if (!THREAD_PRIORITY_IDLE.empty())
-            return false ;
+            max = IDLE;
     case IDLE:
         if (!THREAD_PRIORITY_LOWEST.empty())
-            return false;
+            max = LOWEST;
     case LOWEST:
         if (!THREAD_PRIORITY_BELOW_NORMAL.empty())
-            return false;
+            max = BELOW_NORMAL;
     case BELOW_NORMAL:
         if (!THREAD_PRIORITY_NORMAL.empty())
-            return false;
+            max = NORMAL;
     case NORMAL:
         if (!THREAD_PRIORITY_ABOVE_NORMAL.empty())
-            return false;
+            max = ABOVE_NORMAL;
     case ABOVE_NORMAL:
         if (!THREAD_PRIORITY_HIGHEST.empty())
-            return false;
+            max = HIGHEST;
     case HIGHEST:
         if (!THREAD_PRIORITY_TIME_CRITICAL.empty())
-            return false;
+            max = TIME_CRITICAL;
     }
-    return true;
+    return max;
 }
 
+sim_thread* grab_next(priority queueFrom)
+{
+    if (queueFrom == IDLE)
+        return THREAD_PRIORITY_IDLE.pop();
+    if (queueFrom == LOWEST)
+        return THREAD_PRIORITY_IDLE.pop();
+    if (queueFrom == BELOW_NORMAL)
+        return THREAD_PRIORITY_IDLE.pop();
+    if (queueFrom == NORMAL)
+        return THREAD_PRIORITY_IDLE.pop();
+    if (queueFrom == ABOVE_NORMAL)
+        return THREAD_PRIORITY_IDLE.pop();
+    if (queueFrom == HIGHEST)
+        return THREAD_PRIORITY_IDLE.pop();
+    if (queueFrom == TIME_CRITICAL)
+        return THREAD_PRIORITY_IDLE.pop();
+}
