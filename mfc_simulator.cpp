@@ -5,6 +5,7 @@
 #include <string>
 #include <queue>
 #include <array>
+#include <vector>
 
 using namespace std;
 
@@ -153,5 +154,28 @@ void signal(int freed_idx) {
     Based on the priority, push it to the appropriate queue
 */
 void add_to_queue(struct sim_thread *t) {
+    switch(t->priority) {
+        case 1:
+            THREAD_PRIORITY_IDLE.push(t);
+            break;
+        case 2:
+            THREAD_PRIORITY_LOWEST.push(t);
+            break;
+        case 3:
+            THREAD_PRIORITY_BELOW_NORMAL.push(t);
+            break;
+        case 4:
+            THREAD_PRIORITY_NORMAL.push(t);
+            break;
+        case 5:
+            THREAD_PRIORITY_ABOVE_NORMAL.push(t);
+            break;
+        case 6:
+            THREAD_PRIORITY_ABOVE_NORMAL.push(t);
+            break;
+        case 7:  
+            THREAD_PRIORITY_HIGHEST.push(t);
+            break;
 
+    }
 }
