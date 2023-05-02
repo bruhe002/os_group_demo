@@ -154,7 +154,7 @@ int main() {
         // Loop through for each CPU
         for (unsigned i = 0; i < NUM_CPUS; i++)
         {
-            if (curr_priorites[i] != queues_empty(curr_priorities[i]))
+            if (curr_priorities[i] != queues_empty(curr_priorities[i]));
         }
 
         // End with incrementing clock time
