@@ -46,7 +46,7 @@ void print_thread(const struct sim_thread t);
 void signal(int freed_idx);
 void add_to_queue(struct sim_thread *t);
 bool empty_store_arr();
-bool arriving_thread(struct sim_thread *t, int current_thread);
+void arriving_thread(struct sim_thread *t, int current_thread);
 
 int main() {
     // Simulating MFC preemptive scheduling for threads
@@ -205,7 +205,7 @@ bool empty_store_arr() {
     Checks if a thread's arriving time matches the current time
     if so return, add to queue
 */
-bool arriving_thread(struct sim_thread *t, int current_time) {
+void arriving_thread(struct sim_thread *t, int current_time) {
     if(t->arrival_time == current_time) {
         add_to_queue(t);
     }
