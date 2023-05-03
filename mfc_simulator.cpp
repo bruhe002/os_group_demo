@@ -175,6 +175,7 @@ int main() {
                 curr_priorities[i] = ANY;
                  
             }
+            sleep(2);       // Sleep after the print
             // If the core is IDLE, a higher priority thread has entered, or the time slice is over
             if (current_thread[i] == nullptr || curr_priorities[i] != queues_empty(curr_priorities[i]) || timeSection[i] == TIME_SLICE_VALUE)
             {
@@ -203,7 +204,7 @@ int main() {
         print_execution_message(current_thread, clock_time);
         // End with incrementing clock time
         clock_time++;
-        sleep(2);
+        
     }
 
     cout << endl;
