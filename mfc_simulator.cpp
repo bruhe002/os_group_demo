@@ -6,11 +6,12 @@
 #include <queue>
 #include <array>
 #include <vector>
+#pragma warning(disable : 4996)
 
 using namespace std;
 
 // Create an enum to track priority values
-enum priority {ANY=-1, IDLE, LOWEST, BELOW_NORMAL, NORMAL, ABOVE_NORMAL, HIGHEST, TIME_CRITICAL};
+enum priority { ANY = -1, IDLE=1, LOWEST, BELOW_NORMAL, NORMAL, ABOVE_NORMAL, HIGHEST, TIME_CRITICAL };
 
 const int NUMBER_OF_THREADS = 15;
 const int NUMBER_OF_RESOURCES = 20;
@@ -46,15 +47,15 @@ sim_thread* store_arr[NUMBER_OF_THREADS];
 vector<sim_thread*> BLOCKED_THREADS;
 
 // We will use an array of boolean values to simulate resources being taken
-bool resources[NUMBER_OF_RESOURCES] = {false}; 
+bool resources[NUMBER_OF_RESOURCES] = { false };
 
 // FUNCTIONS
 void print_thread(const sim_thread t);
 void signal(int freed_idx);
-bool block(sim_thread *t);
-void add_to_queue(sim_thread *t);
+bool block(sim_thread* t);
+void add_to_queue(sim_thread* t);
 bool empty_store_arr();
-void arriving_thread(sim_thread *t, int current_thread);
+void arriving_thread(sim_thread* t, int current_thread);
 priority queues_empty(priority);
 sim_thread* grab_next();
 void print_execution_message(sim_thread* cpu[NUM_CPUS], int current_clock_time);
@@ -64,13 +65,13 @@ int main() {
 
     // Create threads and add them to the array
     ifstream my_file(FILE_NAME);        // use ifstream to read from file
-    if(my_file.is_open()) {             // If file is open
+    if (my_file.is_open()) {             // If file is open
         char row[100];                  // Reads each row
 
-        for(int i = 0; i < NUMBER_OF_THREADS && my_file; i++) {
+        for (int i = 0; i < NUMBER_OF_THREADS && my_file; i++) {
             my_file.getline(row, 100);  // Read each row from file
             // cout << row << endl;
-            char *ptr = strtok(row, " ");   // Separate the file contents by space
+            char* ptr = strtok(row, " ");   // Separate the file contents by space
 
             store_arr[i] = new sim_thread;  // Make a new thread 
 
@@ -90,7 +91,7 @@ int main() {
             ptr = strtok(NULL, " ");
 
             print_thread(*store_arr[i]);                // Print for Testing
-        } 
+        }
     }
 
     // Set up variables that will replicate the "System"
@@ -129,14 +130,14 @@ int main() {
             Loop from the top and check if the queues are empty up until the current queue.
             If a queue is not empty, immediatly change the current Thread
 
-            Regardless of a change or not, continue running the process and decrement the burst time of the current running thread 
+            Regardless of a change or not, continue running the process and decrement the burst time of the current running thread
 
         Once a thread begins running, immediately check to see if it needs a resource (-1 means it doesn't need a resource)
         If a resource is needed, use the thread's needed_resource attribute as the index to "resources" array defined earlier.
         If the resource at the index is FALSE, set it to TRUE, and set the thread's has_resource attribute to TRUE.
-        If the resource is already TRUE, and the Thread's has_resource is FALSE, the thread becomes blocked 
+        If the resource is already TRUE, and the Thread's has_resource is FALSE, the thread becomes blocked
             => push it to the blocked queue
-        If the resource is already TRUE, and the Thread's has_resource is TRUE, the thread was the one who acquired the resource, 
+        If the resource is already TRUE, and the Thread's has_resource is TRUE, the thread was the one who acquired the resource,
             continue running as normal
 
         There will be a function defined SIGNAL which will loop through the block queue and check if the blocked threads' needed_resource
@@ -145,18 +146,20 @@ int main() {
 
         The attributes of the threads are public and can be changed directly. Use burst_time as a counter for remaining time the thread has to execute.
 
-        The condition to end the main loop I still need to work out. We can stop when all threads have completed, so when the store_arr is full of 
-            nullptrs? 
+        The condition to end the main loop I still need to work out. We can stop when all threads have completed, so when the store_arr is full of
+            nullptrs?
     */
-    
+
     // Loop for everything above
     while (completed_threads < NUMBER_OF_THREADS)
     {
         // Start by checking if any threads have arrived
         for (unsigned i = 0; i < NUMBER_OF_THREADS; i++)
-            arriving_thread(store_arr[i], clock_time);
-
-
+        {
+            if (store_arr[i] != nullptr)
+                arriving_thread(store_arr[i], clock_time);
+        }
+            
         // Loop through for each CPU
         for (unsigned i = 0; i < NUM_CPUS; i++)
         {
@@ -206,26 +209,27 @@ int main() {
 
 void print_thread(const struct sim_thread t) {
     cout << "Thread ID " << t.tid << endl;
-    cout << "\tThread Priority " << t.prior << endl; 
-    cout << "\tThread Burst Time " << t.burst_time << endl; 
+    cout << "\tThread Priority " << t.prior << endl;
+    cout << "\tThread Burst Time " << t.burst_time << endl;
     cout << "\tThread Arrival Time " << t.arrival_time << endl;
-    cout << "\tThread Needed Resource " << t.needed_resource << endl;  
+    cout << "\tThread Needed Resource " << t.needed_resource << endl;
 }
 
 
 /*
-    Checks the blocked queue to return a thread to its priority queue based on 
+    Checks the blocked queue to return a thread to its priority queue based on
     a resource that was just free
 
     Block queue is a vector, so all the functionalities of a queue and array
 */
 void signal(int freed_idx) {
-    for(int i = 0; i < BLOCKED_THREADS.size(); i++) {
-        if(freed_idx == BLOCKED_THREADS[i]->needed_resource) {
+    for (int i = 0; i < BLOCKED_THREADS.size(); i++) {
+        if (freed_idx == BLOCKED_THREADS[i]->needed_resource) {
             add_to_queue(BLOCKED_THREADS[i]);
             BLOCKED_THREADS.erase(BLOCKED_THREADS.begin() + i);
         }
     }
+    resources[freed_idx] = false;
 }
 
 /*
@@ -236,14 +240,15 @@ void signal(int freed_idx) {
     else acquire the resource (change the resource idx and has_resource to TRUE)
     then return FALSE
 */
-bool block(sim_thread *t) {
-    if(resources[t->needed_resource]){
-        if(!(t->has_resource)) {
+bool block(sim_thread* t) {
+    if (resources[t->needed_resource]) {
+        if (!(t->has_resource)) {
             BLOCKED_THREADS.push_back(t);
             return true;
         }
         return false;
-    } else {
+    }
+    else {
         resources[t->needed_resource] = true;
         t->has_resource = true;
         return false;
@@ -258,29 +263,29 @@ bool block(sim_thread *t) {
         1 -> THREAD_PRIORITY_IDLE
     Based on the priority, push it to the appropriate queue
 */
-void add_to_queue(struct sim_thread *t) {
-    switch(t->prior) {
-        case IDLE:
-            THREAD_PRIORITY_IDLE.push(t);
-            break;
-        case LOWEST:
-            THREAD_PRIORITY_LOWEST.push(t);
-            break;
-        case BELOW_NORMAL:
-            THREAD_PRIORITY_BELOW_NORMAL.push(t);
-            break;
-        case NORMAL:
-            THREAD_PRIORITY_NORMAL.push(t);
-            break;
-        case ABOVE_NORMAL:
-            THREAD_PRIORITY_ABOVE_NORMAL.push(t);
-            break;
-        case HIGHEST:
-            THREAD_PRIORITY_HIGHEST.push(t);
-            break;
-        case TIME_CRITICAL:  
-            THREAD_PRIORITY_TIME_CRITICAL.push(t);
-            break;
+void add_to_queue(struct sim_thread* t) {
+    switch (t->prior) {
+    case IDLE:
+        THREAD_PRIORITY_IDLE.push(t);
+        break;
+    case LOWEST:
+        THREAD_PRIORITY_LOWEST.push(t);
+        break;
+    case BELOW_NORMAL:
+        THREAD_PRIORITY_BELOW_NORMAL.push(t);
+        break;
+    case NORMAL:
+        THREAD_PRIORITY_NORMAL.push(t);
+        break;
+    case ABOVE_NORMAL:
+        THREAD_PRIORITY_ABOVE_NORMAL.push(t);
+        break;
+    case HIGHEST:
+        THREAD_PRIORITY_HIGHEST.push(t);
+        break;
+    case TIME_CRITICAL:
+        THREAD_PRIORITY_TIME_CRITICAL.push(t);
+        break;
 
     }
 }
@@ -291,12 +296,11 @@ void add_to_queue(struct sim_thread *t) {
 */
 bool empty_store_arr() {
     bool result = true;
-    for(int i = 0; i < NUMBER_OF_THREADS; i++) {
-        if(store_arr[i] != nullptr) {
+    for (int i = 0; i < NUMBER_OF_THREADS; i++) {
+        if (store_arr[i] != nullptr) {
             result = false;
         }
     }
-
     return result;
 }
 
@@ -305,8 +309,8 @@ bool empty_store_arr() {
     Checks if a thread's arriving time matches the current time
     if so return, add to queue
 */
-void arriving_thread(struct sim_thread *t, int current_time) {
-    if(t->arrival_time == current_time) {
+void arriving_thread(struct sim_thread* t, int current_time) {
+    if (t->arrival_time == current_time) {
         add_to_queue(t);
     }
 }
@@ -314,7 +318,7 @@ void arriving_thread(struct sim_thread *t, int current_time) {
 /*
     Checks if all queues are empty
 */
-priority queues_empty(priority abovePriority=ANY) {
+priority queues_empty(priority abovePriority = ANY) {
     priority max = abovePriority;
     switch (abovePriority)
     {
@@ -402,11 +406,12 @@ sim_thread* grab_next()
 void print_execution_message(sim_thread* cpu[NUM_CPUS], int current_clock_time) {
     cout << "At time " << current_clock_time << ":" << endl;
     string msg = "";
-    for(int i = 0; i < NUM_CPUS; i++) {
-        
-        if(cpu[i] != nullptr) {
+    for (int i = 0; i < NUM_CPUS; i++) {
+
+        if (cpu[i] != nullptr) {
             msg = "Currently running THREAD " + to_string(cpu[i]->tid) + " with priority " + to_string(cpu[i]->prior);
-        } else {
+        }
+        else {
             msg = "Currently Idle";
         }
         cout << "\tCPU " << i + 1 << ": " << msg << endl;
