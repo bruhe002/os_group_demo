@@ -191,7 +191,7 @@ int main() {
             }
 
         }
-
+        print_execution_message(current_thread, clock_time);
         // End with incrementing clock time
         clock_time++;
 
