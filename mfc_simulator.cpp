@@ -6,7 +6,6 @@
 #include <queue>
 #include <array>
 #include <vector>
-#pragma warning(disable : 4996)
 
 using namespace std;
 
