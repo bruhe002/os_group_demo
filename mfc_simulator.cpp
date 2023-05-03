@@ -1,8 +1,5 @@
-#ifdef _WIN32
-#include <Windows.h>
-#else
+#include <windows.h>
 #include <unistd.h>
-#endif
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -170,10 +167,13 @@ int main() {
             // Check if the thread is finished
             if (current_thread[i] != nullptr && current_thread[i]->burst_time == 0)
             {
+                cout << "\t-------------------------------------------" << endl;
+                cout << "\tCPU " << i << " HAS FINISHED THREAD " << current_thread[i]->tid << endl;
                 completed_threads++;
                 signal(current_thread[i]->needed_resource);
                 current_thread[i] = nullptr;
                 curr_priorities[i] = ANY;
+                 
             }
             // If the core is IDLE, a higher priority thread has entered, or the time slice is over
             if (current_thread[i] == nullptr || curr_priorities[i] != queues_empty(curr_priorities[i]) || timeSection[i] == TIME_SLICE_VALUE)
@@ -203,7 +203,7 @@ int main() {
         print_execution_message(current_thread, clock_time);
         // End with incrementing clock time
         clock_time++;
-
+        sleep(2);
     }
 
     cout << endl;
@@ -246,6 +246,8 @@ void signal(int freed_idx) {
 bool block(sim_thread* t) {
     if (resources[t->needed_resource]) {
         if (!(t->has_resource)) {
+            cout << "\t-------------------------------------------" << endl;
+            cout << "\tThread " << t->tid << " has been blocked" << endl;
             BLOCKED_THREADS.push_back(t);
             return true;
         }
@@ -406,7 +408,7 @@ sim_thread* grab_next()
 }
 
 void print_execution_message(sim_thread* cpu[NUM_CPUS], int current_clock_time) {
-    cout << "At time " << current_clock_time << ":" << endl;
+    cout << "\nAt time " << current_clock_time << ":" << endl;
     string msg = "";
     for (int i = 0; i < NUM_CPUS; i++) {
 
