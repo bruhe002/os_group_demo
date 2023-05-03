@@ -1,3 +1,8 @@
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -31,13 +36,13 @@ struct sim_thread {
 
 
 // Create the Priority Queues
-queue<sim_thread*> THREAD_PRIORITY_IDLE;
-queue<sim_thread*> THREAD_PRIORITY_LOWEST;
-queue<sim_thread*> THREAD_PRIORITY_BELOW_NORMAL;
-queue<sim_thread*> THREAD_PRIORITY_NORMAL;
-queue<sim_thread*> THREAD_PRIORITY_ABOVE_NORMAL;
-queue<sim_thread*> THREAD_PRIORITY_HIGHEST;
-queue<sim_thread*> THREAD_PRIORITY_TIME_CRITICAL;
+queue<sim_thread*> THREAD_PRIORITY_IDLE_QUEUE;
+queue<sim_thread*> THREAD_PRIORITY_LOWEST_QUEUE;
+queue<sim_thread*> THREAD_PRIORITY_BELOW_NORMAL_QUEUE;
+queue<sim_thread*> THREAD_PRIORITY_NORMAL_QUEUE;
+queue<sim_thread*> THREAD_PRIORITY_ABOVE_NORMAL_QUEUE;
+queue<sim_thread*> THREAD_PRIORITY_HIGHEST_QUEUE;
+queue<sim_thread*> THREAD_PRIORITY_TIME_CRITICAL_QUEUE;
 
 // Create a storage array for the threads
 sim_thread* store_arr[NUMBER_OF_THREADS];
@@ -214,7 +219,6 @@ void print_thread(const struct sim_thread t) {
     cout << "\tThread Needed Resource " << t.needed_resource << endl;
 }
 
-
 /*
     Checks the blocked queue to return a thread to its priority queue based on
     a resource that was just free
@@ -265,25 +269,25 @@ bool block(sim_thread* t) {
 void add_to_queue(struct sim_thread* t) {
     switch (t->prior) {
     case IDLE:
-        THREAD_PRIORITY_IDLE.push(t);
+        THREAD_PRIORITY_IDLE_QUEUE.push(t);
         break;
     case LOWEST:
-        THREAD_PRIORITY_LOWEST.push(t);
+        THREAD_PRIORITY_LOWEST_QUEUE.push(t);
         break;
     case BELOW_NORMAL:
-        THREAD_PRIORITY_BELOW_NORMAL.push(t);
+        THREAD_PRIORITY_BELOW_NORMAL_QUEUE.push(t);
         break;
     case NORMAL:
-        THREAD_PRIORITY_NORMAL.push(t);
+        THREAD_PRIORITY_NORMAL_QUEUE.push(t);
         break;
     case ABOVE_NORMAL:
-        THREAD_PRIORITY_ABOVE_NORMAL.push(t);
+        THREAD_PRIORITY_ABOVE_NORMAL_QUEUE.push(t);
         break;
     case HIGHEST:
-        THREAD_PRIORITY_HIGHEST.push(t);
+        THREAD_PRIORITY_HIGHEST_QUEUE.push(t);
         break;
     case TIME_CRITICAL:
-        THREAD_PRIORITY_TIME_CRITICAL.push(t);
+        THREAD_PRIORITY_TIME_CRITICAL_QUEUE.push(t);
         break;
 
     }
@@ -303,7 +307,6 @@ bool empty_store_arr() {
     return result;
 }
 
-
 /*
     Checks if a thread's arriving time matches the current time
     if so return, add to queue
@@ -322,25 +325,25 @@ priority queues_empty(priority abovePriority = ANY) {
     switch (abovePriority)
     {
     case ANY:
-        if (!THREAD_PRIORITY_IDLE.empty())
+        if (!THREAD_PRIORITY_IDLE_QUEUE.empty())
             max = IDLE;
     case IDLE:
-        if (!THREAD_PRIORITY_LOWEST.empty())
+        if (!THREAD_PRIORITY_LOWEST_QUEUE.empty())
             max = LOWEST;
     case LOWEST:
-        if (!THREAD_PRIORITY_BELOW_NORMAL.empty())
+        if (!THREAD_PRIORITY_BELOW_NORMAL_QUEUE.empty())
             max = BELOW_NORMAL;
     case BELOW_NORMAL:
-        if (!THREAD_PRIORITY_NORMAL.empty())
+        if (!THREAD_PRIORITY_NORMAL_QUEUE.empty())
             max = NORMAL;
     case NORMAL:
-        if (!THREAD_PRIORITY_ABOVE_NORMAL.empty())
+        if (!THREAD_PRIORITY_ABOVE_NORMAL_QUEUE.empty())
             max = ABOVE_NORMAL;
     case ABOVE_NORMAL:
-        if (!THREAD_PRIORITY_HIGHEST.empty())
+        if (!THREAD_PRIORITY_HIGHEST_QUEUE.empty())
             max = HIGHEST;
     case HIGHEST:
-        if (!THREAD_PRIORITY_TIME_CRITICAL.empty())
+        if (!THREAD_PRIORITY_TIME_CRITICAL_QUEUE.empty())
             max = TIME_CRITICAL;
     }
     return max;
@@ -350,52 +353,52 @@ priority queues_empty(priority abovePriority = ANY) {
 sim_thread* grab_next()
 {
     sim_thread* val = nullptr;
-    while (!THREAD_PRIORITY_TIME_CRITICAL.empty())
+    while (!THREAD_PRIORITY_TIME_CRITICAL_QUEUE.empty())
     {
-        val = THREAD_PRIORITY_TIME_CRITICAL.front();
-        THREAD_PRIORITY_TIME_CRITICAL.pop();
+        val = THREAD_PRIORITY_TIME_CRITICAL_QUEUE.front();
+        THREAD_PRIORITY_TIME_CRITICAL_QUEUE.pop();
         if (!block(val))
             return val;
     }
-    while (!THREAD_PRIORITY_HIGHEST.empty())
+    while (!THREAD_PRIORITY_HIGHEST_QUEUE.empty())
     {
-        val = THREAD_PRIORITY_HIGHEST.front();
-        THREAD_PRIORITY_HIGHEST.pop();
+        val = THREAD_PRIORITY_HIGHEST_QUEUE.front();
+        THREAD_PRIORITY_HIGHEST_QUEUE.pop();
         if (!block(val))
             return val;
     }
-    while (!THREAD_PRIORITY_ABOVE_NORMAL.empty())
+    while (!THREAD_PRIORITY_ABOVE_NORMAL_QUEUE.empty())
     {
-        val = THREAD_PRIORITY_ABOVE_NORMAL.front();
-        THREAD_PRIORITY_ABOVE_NORMAL.pop();
+        val = THREAD_PRIORITY_ABOVE_NORMAL_QUEUE.front();
+        THREAD_PRIORITY_ABOVE_NORMAL_QUEUE.pop();
         if (!block(val))
             return val;
     }
-    while (!THREAD_PRIORITY_NORMAL.empty())
+    while (!THREAD_PRIORITY_NORMAL_QUEUE.empty())
     {
-        val = THREAD_PRIORITY_NORMAL.front();
-        THREAD_PRIORITY_NORMAL.pop();
+        val = THREAD_PRIORITY_NORMAL_QUEUE.front();
+        THREAD_PRIORITY_NORMAL_QUEUE.pop();
         if (!block(val))
             return val;
     }
-    while (!THREAD_PRIORITY_BELOW_NORMAL.empty())
+    while (!THREAD_PRIORITY_BELOW_NORMAL_QUEUE.empty())
     {
-        val = THREAD_PRIORITY_BELOW_NORMAL.front();
-        THREAD_PRIORITY_BELOW_NORMAL.pop();
+        val = THREAD_PRIORITY_BELOW_NORMAL_QUEUE.front();
+        THREAD_PRIORITY_BELOW_NORMAL_QUEUE.pop();
         if (!block(val))
             return val;
     }
-    while (!THREAD_PRIORITY_LOWEST.empty())
+    while (!THREAD_PRIORITY_LOWEST_QUEUE.empty())
     {
-        val = THREAD_PRIORITY_LOWEST.front();
-        THREAD_PRIORITY_LOWEST.pop();
+        val = THREAD_PRIORITY_LOWEST_QUEUE.front();
+        THREAD_PRIORITY_LOWEST_QUEUE.pop();
         if (!block(val))
             return val;
     }
-    while (!THREAD_PRIORITY_IDLE.empty())
+    while (!THREAD_PRIORITY_IDLE_QUEUE.empty())
     {
-        val = THREAD_PRIORITY_IDLE.front();
-        THREAD_PRIORITY_IDLE.pop();
+        val = THREAD_PRIORITY_IDLE_QUEUE.front();
+        THREAD_PRIORITY_IDLE_QUEUE.pop();
         if (!block(val))
             return val;
     }
