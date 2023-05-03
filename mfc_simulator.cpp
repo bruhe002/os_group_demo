@@ -154,8 +154,6 @@ int main() {
         // Loop through for each CPU
         for (unsigned i = 0; i < NUM_CPUS; i++)
         {
-            if (curr_priorities[i] != queues_empty(curr_priorities[i]))
-
 
         }
 
@@ -350,3 +348,16 @@ sim_thread* grab_next(priority queueFrom)
     return val;
 }
 
+void print_execution_message(sim_thread* cpu[NUM_CPUS], int current_clock_time) {
+    cout << "At time " << current_clock_time << ":" << endl;
+    string msg = "";
+    for(int i = 0; i < NUM_CPUS; i++) {
+        
+        if(cpu[i] != nullptr) {
+            msg = "Currently running THREAD " + to_string(cpu[i]->tid) + " with priority " + to_string(cpu[i]->priority);
+        } else {
+            msg = "Currently Idle";
+        }
+        cout << "\tCPU " << i + 1 << ": " << msg << endl;
+    }
+}
