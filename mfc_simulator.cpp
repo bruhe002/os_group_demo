@@ -9,6 +9,9 @@
 
 using namespace std;
 
+// Create an enum to track priority values
+enum priority {ANY=-1, IDLE, LOWEST, BELOW_NORMAL, NORMAL, ABOVE_NORMAL, HIGHEST, TIME_CRITICAL};
+
 const int NUMBER_OF_THREADS = 15;
 const int NUMBER_OF_RESOURCES = 20;
 const int TIME_SLICE_VALUE = 2;
@@ -19,15 +22,13 @@ const string FILE_NAME = "test_threads.txt";
 // Create a struct to simulate threads
 struct sim_thread {
     int tid;        // Thread ID
-    priority priority;   // Priority number
+    priority prior;   // Priority number
     int burst_time; // Execution time
     int arrival_time; // Time of Arrival
     int needed_resource;    // Used to simulate resources being used 
     bool has_resource = false; // Identifies if thread has resource
 };
 
-// Create an enum to track priority values
-enum priority {ANY=-1, IDLE, LOWEST, BELOW_NORMAL, NORMAL, ABOVE_NORMAL, HIGHEST, TIME_CRITICAL};
 
 // Create the Priority Queues
 queue<sim_thread*> THREAD_PRIORITY_IDLE;
@@ -56,6 +57,7 @@ bool empty_store_arr();
 void arriving_thread(sim_thread *t, int current_thread);
 priority queues_empty(priority);
 sim_thread* grab_next();
+void print_execution_message(sim_thread* cpu[NUM_CPUS], int current_clock_time);
 
 int main() {
     // Simulating MFC preemptive scheduling for threads
@@ -75,7 +77,7 @@ int main() {
             store_arr[i]->tid = stoi(ptr);  // Set Thread ID
             ptr = strtok(NULL, " ");        // Move pointer to the next number in row
 
-            store_arr[i]->priority = stoi(ptr);     // Set Thread Priority
+            store_arr[i]->prior = (priority)stoi(ptr);     // Set Thread Priority
             ptr = strtok(NULL, " ");
 
             store_arr[i]->burst_time = stoi(ptr);   // Set Thread Burst Time
@@ -179,7 +181,7 @@ int main() {
                 }
                 else
                 {
-                    curr_priorities[i] = toRun->priority;
+                    curr_priorities[i] = toRun->prior;
                     current_thread[i] = toRun;
                 }
                 timeSection[i] = 0;
@@ -204,7 +206,7 @@ int main() {
 
 void print_thread(const struct sim_thread t) {
     cout << "Thread ID " << t.tid << endl;
-    cout << "\tThread Priority " << t.priority << endl; 
+    cout << "\tThread Priority " << t.prior << endl; 
     cout << "\tThread Burst Time " << t.burst_time << endl; 
     cout << "\tThread Arrival Time " << t.arrival_time << endl;
     cout << "\tThread Needed Resource " << t.needed_resource << endl;  
@@ -257,7 +259,7 @@ bool block(sim_thread *t) {
     Based on the priority, push it to the appropriate queue
 */
 void add_to_queue(struct sim_thread *t) {
-    switch(t->priority) {
+    switch(t->prior) {
         case IDLE:
             THREAD_PRIORITY_IDLE.push(t);
             break;
@@ -403,7 +405,7 @@ void print_execution_message(sim_thread* cpu[NUM_CPUS], int current_clock_time) 
     for(int i = 0; i < NUM_CPUS; i++) {
         
         if(cpu[i] != nullptr) {
-            msg = "Currently running THREAD " + to_string(cpu[i]->tid) + " with priority " + to_string(cpu[i]->priority);
+            msg = "Currently running THREAD " + to_string(cpu[i]->tid) + " with priority " + to_string(cpu[i]->prior);
         } else {
             msg = "Currently Idle";
         }
