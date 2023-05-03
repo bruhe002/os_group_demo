@@ -19,7 +19,7 @@ const string FILE_NAME = "test_threads.txt";
 // Create a struct to simulate threads
 struct sim_thread {
     int tid;        // Thread ID
-    int priority;   // Priority number
+    priority priority;   // Priority number
     int burst_time; // Execution time
     int arrival_time; // Time of Arrival
     int needed_resource;    // Used to simulate resources being used 
@@ -48,13 +48,14 @@ vector<sim_thread*> BLOCKED_THREADS;
 bool resources[NUMBER_OF_RESOURCES] = {false}; 
 
 // FUNCTIONS
-void print_thread(const struct sim_thread t);
+void print_thread(const sim_thread t);
 void signal(int freed_idx);
-bool block(struct sim_thread *t);
-void add_to_queue(struct sim_thread *t);
+bool block(sim_thread *t);
+void add_to_queue(sim_thread *t);
 bool empty_store_arr();
-void arriving_thread(struct sim_thread *t, int current_thread);
-bool queues_empty();
+void arriving_thread(sim_thread *t, int current_thread);
+priority queues_empty(priority);
+sim_thread* grab_next();
 
 int main() {
     // Simulating MFC preemptive scheduling for threads
@@ -93,6 +94,9 @@ int main() {
     // Set up variables that will replicate the "System"
     int clock_time = 0;
     priority curr_priorities[NUM_CPUS];
+    unsigned timeSection[NUM_CPUS];
+    for (unsigned i = 0; i < NUM_CPUS; i++)
+        timeSection[i] = 0;
     for (unsigned i = 0; i < NUM_CPUS; i++)
         curr_priorities[i] = ANY;
     // For simplicity, we will use one time slice for all queues
@@ -154,8 +158,37 @@ int main() {
         // Loop through for each CPU
         for (unsigned i = 0; i < NUM_CPUS; i++)
         {
-            if (curr_priorities[i] != queues_empty(curr_priorities[i]))
-
+            // Check if the thread is finished
+            if (current_thread[i] != nullptr && current_thread[i]->burst_time == 0)
+            {
+                completed_threads++;
+                signal(current_thread[i]->needed_resource);
+                current_thread[i] = nullptr;
+                curr_priorities[i] = ANY;
+            }
+            // If the core is IDLE, a higher priority thread has entered, or the time slice is over
+            if (current_thread[i] == nullptr || curr_priorities[i] != queues_empty(curr_priorities[i]) || timeSection[i] == TIME_SLICE_VALUE)
+            {
+                if (current_thread[i] != nullptr)
+                    add_to_queue(current_thread[i]);
+                sim_thread* toRun = grab_next();
+                if (toRun == nullptr)
+                {
+                    curr_priorities[i] = ANY;
+                    current_thread[i] = nullptr;
+                }
+                else
+                {
+                    curr_priorities[i] = toRun->priority;
+                    current_thread[i] = toRun;
+                }
+                timeSection[i] = 0;
+            }
+            if (current_thread[i] != nullptr)
+            {
+                current_thread[i]->burst_time--;
+                timeSection[i]++;
+            }
 
         }
 
@@ -201,7 +234,7 @@ void signal(int freed_idx) {
     else acquire the resource (change the resource idx and has_resource to TRUE)
     then return FALSE
 */
-bool block(struct sim_thread *t) {
+bool block(sim_thread *t) {
     if(resources[t->needed_resource]){
         if(!(t->has_resource)) {
             BLOCKED_THREADS.push_back(t);
@@ -225,25 +258,25 @@ bool block(struct sim_thread *t) {
 */
 void add_to_queue(struct sim_thread *t) {
     switch(t->priority) {
-        case 1:
+        case IDLE:
             THREAD_PRIORITY_IDLE.push(t);
             break;
-        case 2:
+        case LOWEST:
             THREAD_PRIORITY_LOWEST.push(t);
             break;
-        case 3:
+        case BELOW_NORMAL:
             THREAD_PRIORITY_BELOW_NORMAL.push(t);
             break;
-        case 4:
+        case NORMAL:
             THREAD_PRIORITY_NORMAL.push(t);
             break;
-        case 5:
+        case ABOVE_NORMAL:
             THREAD_PRIORITY_ABOVE_NORMAL.push(t);
             break;
-        case 6:
+        case HIGHEST:
             THREAD_PRIORITY_HIGHEST.push(t);
             break;
-        case 7:  
+        case TIME_CRITICAL:  
             THREAD_PRIORITY_TIME_CRITICAL.push(t);
             break;
 
@@ -309,43 +342,57 @@ priority queues_empty(priority abovePriority=ANY) {
 }
 
 // A function to return the highest priority from the relative queue
-sim_thread* grab_next(priority queueFrom)
+sim_thread* grab_next()
 {
     sim_thread* val = nullptr;
-    if (queueFrom == IDLE)
-    {
-        val = THREAD_PRIORITY_IDLE.front();
-        THREAD_PRIORITY_IDLE.pop();
-    }
-    if (queueFrom == LOWEST)
-    {
-        val = THREAD_PRIORITY_LOWEST.front();
-        THREAD_PRIORITY_LOWEST.pop();
-    }
-    if (queueFrom == BELOW_NORMAL)
-    {
-        val = THREAD_PRIORITY_BELOW_NORMAL.front();
-        THREAD_PRIORITY_BELOW_NORMAL.pop();
-    }
-    if (queueFrom == NORMAL)
-    {
-        val = THREAD_PRIORITY_NORMAL.front();
-        THREAD_PRIORITY_NORMAL.pop();
-    }
-    if (queueFrom == ABOVE_NORMAL)
-    {
-        val = THREAD_PRIORITY_ABOVE_NORMAL.front();
-        THREAD_PRIORITY_ABOVE_NORMAL.pop();
-    }
-    if (queueFrom == HIGHEST)
-    {
-        val = THREAD_PRIORITY_HIGHEST.front();
-        THREAD_PRIORITY_HIGHEST.pop();
-    }
-    if (queueFrom == TIME_CRITICAL)
+    while (!THREAD_PRIORITY_TIME_CRITICAL.empty())
     {
         val = THREAD_PRIORITY_TIME_CRITICAL.front();
         THREAD_PRIORITY_TIME_CRITICAL.pop();
+        if (!block(val))
+            return val;
+    }
+    while (!THREAD_PRIORITY_HIGHEST.empty())
+    {
+        val = THREAD_PRIORITY_HIGHEST.front();
+        THREAD_PRIORITY_HIGHEST.pop();
+        if (!block(val))
+            return val;
+    }
+    while (!THREAD_PRIORITY_ABOVE_NORMAL.empty())
+    {
+        val = THREAD_PRIORITY_ABOVE_NORMAL.front();
+        THREAD_PRIORITY_ABOVE_NORMAL.pop();
+        if (!block(val))
+            return val;
+    }
+    while (!THREAD_PRIORITY_NORMAL.empty())
+    {
+        val = THREAD_PRIORITY_NORMAL.front();
+        THREAD_PRIORITY_NORMAL.pop();
+        if (!block(val))
+            return val;
+    }
+    while (!THREAD_PRIORITY_BELOW_NORMAL.empty())
+    {
+        val = THREAD_PRIORITY_BELOW_NORMAL.front();
+        THREAD_PRIORITY_BELOW_NORMAL.pop();
+        if (!block(val))
+            return val;
+    }
+    while (!THREAD_PRIORITY_LOWEST.empty())
+    {
+        val = THREAD_PRIORITY_LOWEST.front();
+        THREAD_PRIORITY_LOWEST.pop();
+        if (!block(val))
+            return val;
+    }
+    while (!THREAD_PRIORITY_IDLE.empty())
+    {
+        val = THREAD_PRIORITY_IDLE.front();
+        THREAD_PRIORITY_IDLE.pop();
+        if (!block(val))
+            return val;
     }
     return val;
 }
